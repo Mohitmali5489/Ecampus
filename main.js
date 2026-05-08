@@ -73,14 +73,14 @@ function switchTab(tabName) {
         el.classList.remove('active');
     });
     
-    // Reset all nav icons to unselected (Updated for new UI)
+    // Reset all nav icons to unselected
     document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.remove('bg-[#006e1c]', 'dark:bg-primary', 'text-white', 'active');
         el.classList.add('text-on-surface-variant', 'hover:bg-surface-variant/40');
         el.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24";
     });
 
-    // Highlight the clicked nav icon (Updated for new UI)
+    // Highlight the clicked nav icon
     const activeNav = document.getElementById('nav-' + tabName);
     if (activeNav) {
         activeNav.classList.remove('text-on-surface-variant', 'hover:bg-surface-variant/40');
@@ -124,13 +124,8 @@ const themeCheckbox = document.getElementById('theme-toggle-switch');
 
 function initTheme() {
     const savedTheme = localStorage.getItem('ecoCampusTheme') || 'light';
-    
-    // Fixed: safely add/remove the dark class instead of overwriting all classes
-    if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
+    // Reverted back to setAttribute logic to correctly swap the root class
+    document.documentElement.setAttribute('class', savedTheme);
     
     // Sync switch UI
     if(themeCheckbox) {
@@ -140,13 +135,9 @@ function initTheme() {
 
 if(themeCheckbox) {
     themeCheckbox.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('ecoCampusTheme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('ecoCampusTheme', 'light');
-        }
+        const newTheme = e.target.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('class', newTheme);
+        localStorage.setItem('ecoCampusTheme', newTheme);
     });
 }
 
