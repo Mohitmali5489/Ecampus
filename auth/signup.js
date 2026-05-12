@@ -36,11 +36,69 @@ function setLoading(button, isLoading) {
     }
 }
 
+// 🟢 Load colleges dynamically from the 'colleges' table
+async function loadColleges() {
+    const select = document.getElementById("signup-college");
+
+    try {
+        const { data: colleges, error } = await sb
+            .from('colleges')
+            .select('name')
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.error("Error loading colleges:", error);
+            select.innerHTML = '<option value="" disabled selected>Failed to load. Please try again.</option>';
+            return;
+        }
+
+        // Clear existing placeholder
+        select.innerHTML = '<option value="" disabled selected>Select your College</option>';
+        
+        // Populate from DB
+        colleges.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+        });
+
+        // Re-add the "Other" option at the end
+        const otherOpt = document.createElement("option");
+        otherOpt.value = "Other";
+        otherOpt.textContent = "Other (Not Listed)";
+        select.appendChild(otherOpt);
+
+    } catch (err) {
+        console.error("Critical error fetching colleges:", err);
+    }
+}
+
 // 🔐 HANDLE SIGNUP
 async function handleSignup(event) {
     event.preventDefault();
 
-    const collegeName = document.getElementById("signup-college").value.trim();
+    let collegeName = document.getElementById("signup-college").value;
+    const otherCollegeInput = document.getElementById("signup-college-other");
+
+    // 🟢 Capture custom college name and upload to database
+    if (collegeName === "Other") {
+        collegeName = otherCollegeInput.value.trim();
+        
+        // Insert the new college into the colleges table so it's available for future users
+        if(collegeName) {
+            const { error: collegeError } = await sb
+                .from('colleges')
+                .upsert({ name: collegeName }, { onConflict: 'name' }); 
+                
+            if (collegeError) {
+                console.error("Error adding new college to database:", collegeError);
+            }
+        }
+    } else if (collegeName) {
+        collegeName = collegeName.trim();
+    }
+
     const fullName = document.getElementById("signup-fullname").value.trim();
     const email = document.getElementById("signup-email").value.trim();
     const password = document.getElementById("signup-password").value;
@@ -83,12 +141,12 @@ async function handleSignup(event) {
         const user = authData?.user;
         
         if (user) {
-            // ✅ Since we use Email Confirmation and a DB Trigger,
-            // we just show a success message here.
+            // ✅ Account successfully created
             showMessage("Account created! Please check your email to confirm your account.", false);
             
             // Clear the form
             signupForm.reset();
+            document.getElementById('other-college-container').classList.add('hidden');
         } else {
              showMessage("Something went wrong during signup.");
         }
@@ -125,6 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Signup form not found!");
         return;
     }
+
+    // Load the dropdown list
+    loadColleges();
 
     signupForm.addEventListener("submit", handleSignup);
 
