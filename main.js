@@ -52,12 +52,12 @@ async function fetchUserProfile(authUserId, fallbackEmail) {
 
 async function logout() {
     await sb.auth.signOut();
-    window.location.href = "/EcoCampus/auth/login.html";
+    window.location.href = "/ECampus/auth/login.html";
 }
 
 function openApp(path) {
     if (!currentSession) {
-        window.location.href = "/EcoCampus/auth/login.html?redirect=" + path;
+        window.location.href = "/ECampus/auth/login.html?redirect=" + path;
         return;
     }
     window.location.href = path;
